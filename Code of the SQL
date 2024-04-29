@@ -1,0 +1,104 @@
+Ans 01. 
+select * from employee
+order by hire_date asc limit 1;
+
+Ans 02.
+select max(billing_country)  from invoice;
+
+Ans 03. 
+select total from invoice
+order by total desc limit 3;
+
+Ans 04.
+SELECT  sum(total) as invoice_num , billing_city
+FROM invoice
+GROUP BY billing_city
+order by invoice_num desc limit 1 ; 
+
+Ans 05.
+SELECT 
+    customer.first_name,
+    customer.last_name,
+    SUM(invoice.total) AS total
+FROM 
+    customer
+INNER JOIN 
+    invoice ON customer.customer_id = invoice.customer_id
+GROUP BY 
+    customer.first_name,
+    customer.last_name
+ORDER BY 
+    total DESC 
+LIMIT 1;
+ 
+
+Ans 06.
+select customer.first_name,customer.last_name,customer.email , track.genre_id
+from customer
+inner join track on customer.customer_id = track.track_id
+order by email asc;
+
+
+Ans 07. 
+SELECT artist.name AS band_name, COUNT(track.name) AS num_of_songs
+FROM track
+JOIN album ON album.album_id = track.album_id
+JOIN artist ON album.artist_id = artist.artist_id
+JOIN genre ON genre.genre_id = track.genre_id
+WHERE genre.name = 'Rock'
+GROUP BY artist.name
+ORDER BY num_of_songs DESC
+LIMIT 10;
+
+
+Ans 08. 
+SELECT name, milliseconds from track where LENGTH(name)> (SELECT avg(LENGTH(name)) FROM track) limit 10; 
+
+Ans 09.
+with bsa as(
+select artist.artist_id, artist.name as artist_name, sum(invoice_line.unit_price*invoice_line.quantity) as total_spent
+from invoice_line
+join track on track.track_id = invoice_line.track_id	
+join album on album.album_id = track.album_id	
+join artist on artist.artist_id = album.artist_id
+group by 1,2
+order by 3 desc
+limit 1 )
+select customer.customer_id, customer.first_name,customer.last_name,bsa.artist_name,
+Sum(invoice_line.unit_price*invoice_line.quantity) as amt 
+from invoice
+join customer on customer.customer_id = invoice.customer_id 
+join invoice_line on invoice_line.invoice_id = invoice.invoice_id
+join track on track.track_id = invoice_line.track_id	
+join album on album.album_id = track.album_id
+join bsa on bsa.artist_id = album.artist_id
+GROUP BY  customer.customer_id, customer.first_name,customer.last_name,bsa.artist_name
+order by amt desc ;
+
+
+Ans 10. 
+WITH popular_genre AS 
+(
+    SELECT COUNT(invoice_line.quantity) AS purchases, customer.country, genre.name, genre.genre_id, 
+	ROW_NUMBER() OVER(PARTITION BY customer.country ORDER BY COUNT(invoice_line.quantity) DESC) AS RowNo 
+   FROM invoice_line 
+	JOIN invoice ON invoice.invoice_id = invoice_line.invoice_id
+	JOIN customer ON customer.customer_id = invoice.customer_id
+	JOIN track ON track.track_id = invoice_line.track_id
+	JOIN genre ON genre.genre_id = track.genre_id
+	GROUP BY 2,3,4
+	ORDER BY 2 ASC, 1 DESC
+)
+SELECT * FROM popular_genre WHERE RowNo <= 1
+
+
+Ans 11. 
+select customer.customer_id,customer.first_name,customer.last_name,invoice.billing_country,sum(invoice.total) as total_spent
+from invoice
+join customer on customer.customer_id = invoice.customer_id
+group by 1,2,3,4
+order by 4 asc, 5 desc;
+
+
+
+
